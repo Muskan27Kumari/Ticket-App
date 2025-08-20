@@ -3,7 +3,7 @@ from app.routers import auth, user, ticket, passenger, client  # Import client i
 
 app = FastAPI()
 
-app.include_router(auth.router, tags=["auth"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(user.router)
 app.include_router(ticket.router)
 app.include_router(passenger.router)

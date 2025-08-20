@@ -8,7 +8,7 @@ from app.schemas.token import TokenData
 
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     credentials_exception = HTTPException(
@@ -16,17 +16,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    # if token in blacklisted_tokens:
-    #     raise credentials_exception
-    # try:
-    #     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    #     email: str = payload.get("sub")
-    #     if email is None:
-    #         raise credentials_exception
-    #     token_data = TokenData(email=email)
-    # except JWTError:
-    #     raise credentials_exception
-    # return {"email": token_data.email}
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = TokenData(email=email)
+    except JWTError:
+        raise credentials_exception
+    return {"email": token_data.email}
 
 def get_current_client(token: str = Depends(oauth2_scheme)) -> dict:
     # Similar to get_current_user, but for clients
@@ -35,8 +33,6 @@ def get_current_client(token: str = Depends(oauth2_scheme)) -> dict:
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if token in blacklisted_tokens:
-        raise credentials_exception
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         name: str = payload.get("sub")
