@@ -24,7 +24,17 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    return {"email": token_data.email}
+    
+    # Fetch the actual user from database
+    from app.database import db
+    user = db.users.find_one({"email": token_data.email})
+    if user is None:
+        raise credentials_exception
+    
+    # Convert ObjectId to string for JSON serialization
+    user["id"] = str(user["_id"])
+    del user["_id"]
+    return user
 
 def get_current_client(token: str = Depends(oauth2_scheme)) -> dict:
     # Similar to get_current_user, but for clients
@@ -41,7 +51,17 @@ def get_current_client(token: str = Depends(oauth2_scheme)) -> dict:
         token_data = TokenData(name=name)  # Assuming client uses name as sub
     except JWTError:
         raise credentials_exception
-    return {"name": token_data.name}
+    
+    # Fetch the actual client from database
+    from app.database import db
+    client = db.clients.find_one({"name": token_data.name})
+    if client is None:
+        raise credentials_exception
+    
+    # Convert ObjectId to string for JSON serialization
+    client["id"] = str(client["_id"])
+    del client["_id"]
+    return client
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()

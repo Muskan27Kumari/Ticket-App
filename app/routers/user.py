@@ -6,8 +6,15 @@ from app.dependencies import get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.post("/register", response_model=str)
+def register_user(user: UserCreate):
+    # Public registration endpoint - no authentication required
+    return UserService.create_user(user.dict())
+
 @router.post("/", response_model=str)
 def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
+    # Admin endpoint - requires authentication
+    # You might want to add role-based access control here
     return UserService.create_user(user.dict())
 
 @router.get("/", response_model=List[UserOut])
