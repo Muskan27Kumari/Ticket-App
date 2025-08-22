@@ -10,16 +10,31 @@ class TicketService:
 
     @staticmethod
     def create_ticket(ticket_data: dict, current_user: dict):
-        ticket_data["user_id"] = ObjectId(ticket_data["user_id"]) if "user_id" in ticket_data else None
-        if not ticket_data.get("user_id"):
-            user = TicketService.user_collection.find_one({"email": current_user["email"]})
-            ticket_data["user_id"] = user["_id"]
-        ticket_model = TicketModel(**ticket_data)
-        result = TicketService.collection.insert_one(ticket_model.dict(exclude={"id"}))
+        # Get user from database
+        user = TicketService.user_collection.find_one({"email": current_user["email"]})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Prepare ticket data for database insertion
+        db_ticket_data = {
+            "from_location": ticket_data["from_location"],
+            "to_location": ticket_data["to_location"],
+            "price": ticket_data["price"],
+            "date_of_journey": ticket_data["date_of_journey"],
+            "user_id": user["_id"],  # Use ObjectId from database
+            "passengers": [],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert into database
+        result = TicketService.collection.insert_one(db_ticket_data)
+        
         # Add to user's tickets
         TicketService.user_collection.update_one(
-            {"_id": ticket_data["user_id"]}, {"$push": {"tickets": result.inserted_id}}
+            {"_id": user["_id"]}, {"$push": {"tickets": result.inserted_id}}
         )
+        
         return str(result.inserted_id)
 
     @staticmethod
@@ -31,8 +46,11 @@ class TicketService:
             user = TicketService.user_collection.find_one({"email": current_user["email"]})
             if ticket["user_id"] != user["_id"]:
                 raise HTTPException(status_code=403, detail="Not authorized")
+            
+            # Convert ObjectId fields to strings for response
             ticket["id"] = str(ticket["_id"])
             del ticket["_id"]
+            ticket["user_id"] = str(ticket["user_id"])
             ticket["passengers"] = [str(p) for p in ticket.get("passengers", [])]
             return ticket
         except:

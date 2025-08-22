@@ -17,7 +17,7 @@ def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)
     # You might want to add role-based access control here
     return UserService.create_user(user.dict())
 
-@router.get("/", response_model=List[UserOut])
+@router.get("/")
 def get_users(current_user: dict = Depends(get_current_user)):
     return UserService.get_users()
 

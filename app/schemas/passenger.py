@@ -11,7 +11,7 @@ class PassengerBase(BaseModel):
     phone_no: str
 
 class PassengerCreate(PassengerBase):
-    pass
+    ticket_id: str
 
 class PassengerUpdate(BaseModel):
     name: str | None = None
@@ -22,6 +22,7 @@ class PassengerUpdate(BaseModel):
 
 class PassengerOut(PassengerBase):
     id: str
+    ticket_id: str
     created_at: datetime
     updated_at: datetime
 

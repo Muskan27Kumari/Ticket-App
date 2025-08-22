@@ -20,6 +20,7 @@ class TicketUpdate(BaseModel):
 
 class TicketOut(TicketBase):
     id: str
+    user_id: str
     passengers: List[str] = []  # Passenger IDs as strings
     created_at: datetime
     updated_at: datetime

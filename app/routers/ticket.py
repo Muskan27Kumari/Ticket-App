@@ -2,12 +2,15 @@ from fastapi import APIRouter, Depends
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketOut
 from app.services.ticket import TicketService
 from app.dependencies import get_current_user
+from bson import ObjectId
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
-@router.post("/", response_model=str)
+@router.post("/")
 def create_ticket(ticket: TicketCreate, current_user: dict = Depends(get_current_user)):
-    return TicketService.create_ticket(ticket.dict(), current_user)
+    print("Creating ticket with data:", ticket)
+    ticket_id = TicketService.create_ticket(ticket.dict(), current_user)
+    return {"id": ticket_id, "message": "Ticket created successfully"}
 
 @router.get("/{ticket_id}", response_model=TicketOut)
 def get_ticket(ticket_id: str, current_user: dict = Depends(get_current_user)):

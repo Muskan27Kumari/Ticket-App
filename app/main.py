@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, user, ticket, passenger, client  # Import client if implemented
+from app.routers import auth, user, ticket, passenger  # Import client if implemented
 
 app = FastAPI()
 
