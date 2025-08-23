@@ -5,12 +5,21 @@ from app.schemas.token import Token
 from app.services.auth import AuthService
 from app.dependencies import get_current_user
 from app.services.user import UserService
+from app.utils import validate_password
 # from app.services.client import ClientService
 
 router = APIRouter()
 
 @router.post("/register", response_model=Token)
 def register(form_data: OAuth2PasswordRequestForm = Depends()):
+    # Validate password strength
+    is_valid, error_message = validate_password(form_data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_message
+        )
+    
     # Assuming register uses same form; in production, separate schema
     user_data = {"email": form_data.username, "password": form_data.password, "name": "", "phone": ""}
     user_id = UserService.create_user(user_data)  # Add name/phone via separate endpoint if needed

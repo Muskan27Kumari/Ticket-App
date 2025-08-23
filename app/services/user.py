@@ -4,6 +4,7 @@ from datetime import datetime
 from app.database import db
 from app.services.auth import AuthService
 from app.models.user import UserModel
+from app.utils import validate_password
 
 class UserService:
     collection = db.users
@@ -12,6 +13,12 @@ class UserService:
     def create_user(user_data: dict):
         if UserService.collection.find_one({"email": user_data["email"]}):
             raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Validate password strength
+        is_valid, error_message = validate_password(user_data["password"])
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
+        
         user_data["password"] = AuthService.get_password_hash(user_data["password"])
         user_model = UserModel(**user_data)
         result = UserService.collection.insert_one(user_model.dict(exclude={"id"}))
@@ -43,6 +50,10 @@ class UserService:
     def update_user(user_id: str, update_data: dict):
         try:
             if "password" in update_data:
+                # Validate password strength
+                is_valid, error_message = validate_password(update_data["password"])
+                if not is_valid:
+                    raise HTTPException(status_code=400, detail=error_message)
                 update_data["password"] = AuthService.get_password_hash(update_data["password"])
             update_data["updated_at"] = datetime.utcnow()
             result = UserService.collection.update_one(
